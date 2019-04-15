@@ -1,8 +1,10 @@
 #'GLS model selection for time series
 #'
+#'@param formula An object of class \code{formula} describing the model to be fitted. Should be
+#'in the form \code{series ~ time}.
 #'@param data Input data.frame to be analyzed.
-#'@param diagnostic `logical`. Returns best fitting model from selection process if `TRUE`.
-#'@param list_models `logical`. Returns coefficients and AICc scores of all fitted models.
+#'@param diagnostic \code{logical}. Returns best fitting model from selection process if \code{TRUE}.
+#'@param list_models \code{logical}. Returns coefficients and AICc scores of all fitted models.
 #'
 #'@param ... Other arguments may be passed to the gls.
 #'

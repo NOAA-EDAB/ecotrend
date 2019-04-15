@@ -12,3 +12,4 @@ Imports:
   nlme,
   AICcmodavg,
   dplyr
+RoxygenNote: 6.1.1
