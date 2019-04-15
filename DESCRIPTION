@@ -1,0 +1,14 @@
+Package: ecotrend
+Type: Package
+Title: Testing for trend in ecosystem indicator time series
+Version: 0.0.0.9000
+Author: Sean Hardison
+Maintainer: Sean Hardison <sean.hardison@noaa.gov>
+Description: A package for testing for trend in ecosystem indicator time series.
+License: CC0
+Encoding: UTF-8
+LazyData: true
+Imports: 
+  nlme,
+  AICcmodavg,
+  dplyr
