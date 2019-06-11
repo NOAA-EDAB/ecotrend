@@ -3,15 +3,15 @@
 #'@param formula An object of class \code{formula} describing the model to be fitted. Should be
 #'in the form \code{series ~ time}.
 #'@param data Input data.frame to be analyzed.
-#'@param diagnostic \code{logical}. Returns best fitting model from selection process if \code{TRUE}.
-#'@param list_models \code{logical}. Returns coefficients and AICc scores of all fitted models.
+#'@param diagnostic \code{logical}. If \code{TRUE}, returns model coefficients and small-sample AIC from model selection process.
+#'@param fit_model \code{logical}. If \code{TRUE}, returns data.frame of modeled trend and original series.
 #'
 #'@param ... Other arguments may be passed to the gls.
 #'
 #'
 #'@export
 #'
-#'@return gls model object
+#'@return A GLS model object or list of model outputs.
 #'
 #'
 #'@examples
@@ -26,7 +26,8 @@
 
 glsMs <- function(formula, data,
                   diagnostic = F,
-                  list_models = F,...) {
+                  fit_model = F,
+                  ...) {
 
   data <- model.frame(formula, data = data)
   names(data)[1] <- "y"
@@ -279,14 +280,39 @@ glsMs <- function(formula, data,
     model <- linear_ar2
   }
 
+
   model <- c(model, list("glsMs" = best_lm$model))
   class(model) <- "gls"
+
+  if (fit_model){
+
+    if (best_lm$pval > 0.05) warning("Trend not significantly different from 0 (P = ",
+                                     paste(round(best_lm$pval,4)))
+
+    newtime <- seq(min(data$x), max(data$x), length.out=length(data$x))
+    newdata <- data.frame(x = newtime,
+                          x2 = newtime^2)
+    lm_pred <- AICcmodavg::predictSE(model,
+                                     newdata = newdata,
+                                     se.fit = TRUE) #Get BLUE
+    fit <- data.frame(time = data$x,
+                      series = data$y,
+                       fit = lm_pred$fit)
+
+    if (!diagnostic){
+      return(fit)
+    } else {
+      return(list(fit = fit,
+                  model = model,
+                  "selection summary" = df_aicc))
+    }
+
+  }
 
   if (!diagnostic){
     return(model)
   } else {
-    return(list(model, df_aicc))
+    return(list(model = model,
+                "selection summary" = df_aicc))
   }
-
-
 }
