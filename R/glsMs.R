@@ -47,7 +47,6 @@ glsMs <- function(formula, data,
               na.action = na.omit,
               method = "ML", ...,
               ...)
-  print("constant_norm")
   constant_ar1 <-
     try(nlme::gls(y ~ 1,
                   data = data,
@@ -55,7 +54,6 @@ glsMs <- function(formula, data,
                   na.action = na.omit,
                   method = "ML",
                   ...))
-  print("constant_ar1")
   if (class(constant_ar1) == "try-error"){
     return(best_lm <- data.frame(model = NA,
                                  aicc  = NA,
@@ -72,7 +70,6 @@ glsMs <- function(formula, data,
                   correlation = nlme::corARMA(form = ~x, p = 2, q = 0),
                   method = "ML",
                   ...))
-  print("constant_ar2")
   if (class(constant_ar2) == "try-error"){
     message("BFGS optimizer has failed, defaulting to Nelder-Mead routine (NULL AR2)")
 
@@ -218,7 +215,6 @@ glsMs <- function(formula, data,
   }
 
 
-  print("here")
   # Calculate AICs for all models
   df_aicc <-
     data.frame(model = c("poly_norm",
