@@ -46,7 +46,7 @@ glsMs <- function(formula, data,
     nlme::gls(y ~ 1,
               data = data,
               na.action = na.omit,
-              method = "ML", ...,
+              method = "ML",
               ...)
   constant_ar1 <-
     try(nlme::gls(y ~ 1,
@@ -56,12 +56,7 @@ glsMs <- function(formula, data,
                   method = "ML",
                   ...))
   if (class(constant_ar1) == "try-error"){
-    return(best_lm <- data.frame(model = NA,
-                                 aicc  = NA,
-                                 coefs..Intercept = NA,
-                                 coefs.x = NA,
-                                 coefs.x2 = NA,
-                                 pval = NA))
+    return(message("Failure to model mean of AR1 model."))
   }
 
   #Null model with AR(2) error structure
@@ -92,8 +87,6 @@ glsMs <- function(formula, data,
                                     method = "ML", ...))
 
       if (class(constant_ar2) == "try-error"){
-
-
         return(message("NUll AR2 model has failed!!!!!"))
       }
 
@@ -116,13 +109,7 @@ glsMs <- function(formula, data,
                   method = "ML", ...))
 
   if (class(linear_ar1) == "try-error"){
-    return(best_lm <- data.frame(model = NA,
-                                 aicc  = NA,
-                                 coefs..Intercept = NA,
-                                 coefs.x = NA,
-                                 coefs.x2 = NA,
-                                 pval = NA))
-
+    return(message("Linear AR1 model has failed!"))
   }
 
   #Linear model with AR2 error
@@ -152,65 +139,7 @@ glsMs <- function(formula, data,
                                   method = "ML", ...))
 
       if (class(linear_ar2) == "try-error"){
-
-
         return(message("Linear AR2 model has failed!!!!!"))
-      }
-    }
-  }
-
-  # Polynomial model with normal error
-  poly_norm <- nlme::gls(y ~ x + x2,
-                         data = data,
-                         na.action = na.omit,
-                         method = "ML", ...)
-
-  # Polynomial model with AR1 error
-  poly_ar1 <-
-    try(nlme::gls(y ~ x + x2,
-                  data = data,
-                  correlation = nlme::corAR1(form = ~x),
-                  na.action = na.omit,
-                  method = "ML", ...))
-  if (class(poly_ar1) == "try-error"){
-    return(best_lm <- data.frame(model = NA,
-                                 aicc  = NA,
-                                 coefs..Intercept = NA,
-                                 coefs.x = NA,
-                                 coefs.x2 = NA,
-                                 pval = NA))
-  }
-
-  #Polynomial model with AR2 error
-  poly_ar2 <- try(nlme::gls(y ~ x + x2,
-                            data = data,
-                            correlation = nlme::corARMA(form = ~x, p = 2, q = 0),
-                            method = "ML", ...))
-  if (class(linear_ar2) == "try-error"){
-
-    message("BFGS optimizer has failed, defaulting to Nelder-Mead routine (AR2)")
-
-    linear_ar2 <- try(nlme::gls(y ~ x + x2,
-                                data = data,
-                                control = nlme::glsControl(opt = "optim",
-                                                           optimMethod = "Nelder-Mead"),
-                                correlation = nlme::corARMA(form = ~x, p = 2, q = 0),
-                                method = "ML", ...))
-    if (class(linear_ar2) == "try-error"){
-
-      message("Nelder-Mead optimizer has failed, defaulting to SANN routine (AR2)")
-
-      linear_ar2 <- try(nlme::gls(y ~ x + x2,
-                                  data = data,
-                                  control = nlme::glsControl(opt = "optim",
-                                                             optimMethod = "SANN"),
-                                  correlation = nlme::corARMA(form = ~x, p = 2, q = 0),
-                                  method = "ML", ...))
-
-      if (class(linear_ar2) == "try-error"){
-
-
-        return(message("Quadratic AR2 model has failed!!!!!"))
       }
     }
   }
@@ -218,38 +147,18 @@ glsMs <- function(formula, data,
 
   # Calculate AICs for all models
   df_aicc <-
-    data.frame(model = c("poly_norm",
-                         "poly_ar1",
-                         "poly_ar2",
-
-                         "linear_norm",
+    data.frame(model = c("linear_norm",
                          "linear_ar1",
                          "linear_ar2"),
-               aicc  = c(AICcmodavg::AICc(poly_norm),
-                         AICcmodavg::AICc(poly_ar1),
-                         AICcmodavg::AICc(poly_ar2),
-
-                         AICcmodavg::AICc(linear_norm),
+               aicc  = c(AICcmodavg::AICc(linear_norm),
                          AICcmodavg::AICc(linear_ar1),
                          AICcmodavg::AICc(linear_ar2)),
 
-               coefs = rbind(coef(poly_norm),
-                             coef(poly_ar1),
-                             coef(poly_ar2),
-                             c(coef(linear_norm), NA),
-                             c(coef(linear_ar1),  NA),
-                             c(coef(linear_ar2), NA)),
+               coefs = rbind(coef(linear_norm),
+                             coef(linear_ar1),
+                             coef(linear_ar2)),
 
                pval = c(anova(update(constant_norm),
-                              update(poly_norm))$`p-value`[2],
-
-                        anova(update(constant_ar1),
-                              update(poly_ar1))$`p-value`[2],
-
-                        anova(update(constant_ar1),
-                              update(linear_ar1))$`p-value`[2],
-
-                        anova(update(constant_norm),
                               update(linear_norm))$`p-value`[2],
 
                         anova(update(constant_ar1),
@@ -266,13 +175,7 @@ glsMs <- function(formula, data,
   #Find best model
   best_lm <- df_aicc[df_aicc$aicc == min(df_aicc$aicc),]
 
-  if (best_lm$model == "poly_norm") {
-    model <- poly_norm
-  } else if (best_lm$model == "poly_ar1") {
-    model <- poly_ar1
-  } else if (best_lm$model == "poly_ar2") {
-    model <- poly_ar2
-  } else if (best_lm$model == "linear_norm") {
+if (best_lm$model == "linear_norm") {
     model <- linear_norm
   } else if (best_lm$model == "linear_ar1") {
     model <- linear_ar1
@@ -287,7 +190,7 @@ glsMs <- function(formula, data,
   if (fit_model){
 
     if (best_lm$pval > 0.05) warning("Trend not significantly different from 0 (P = ",
-                                     paste(round(best_lm$pval,4)))
+                                     paste(round(best_lm$pval,4)),")")
 
     newtime <- seq(min(data$x), max(data$x), length.out=length(data$x))
     newdata <- data.frame(x = newtime,
